@@ -43,11 +43,11 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     # Наши приложения
-    "users.apps.UsersConfig",
-    "clients.apps.ClientsConfig",
-    "messages.apps.MessagesConfig",
-    "mailings.apps.MailingsConfig",
-    "main.apps.MainConfig",
+    "users",
+    "clients",
+    "mail_messages",
+    "mailings",
+    "main",
 ]
 
 MIDDLEWARE = [

@@ -1,7 +1,7 @@
 [project]
 name = "project4"
 version = "0.1.0"
-description = "Messenger"
+description = "MessengerApp"
 authors = [
     {name = "Daniil", email = "lesnicenkodaniil62@gmail.com"}
 ]
