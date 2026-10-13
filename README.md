@@ -59,21 +59,25 @@ poetry add openpyxl
 poetry add python-dotenv
 11. django
 poetry add django
-12. pytest
+12. redis
+poetry add redis
+13. django-redis
+poetry add redis django-redis
+14. pytest
 poetry add --group dev pytest
 Code coverage в
 Code coverage в библиотеку pytest
-13. pytest-cov
+15. pytest-cov
 poetry add --group dev pytest-cov
-14. django-stubs
+16. django-stubs
 poetry add --group lint django-stubs
-15. django-stubs-ext
+17. django-stubs-ext
 poetry add --group lint django-stubs-ext 
-16. python-dotenv
+18. python-dotenv
 poetry add --group lint python-dotenv   
-17. pillow
+19. pillow
 poetry add --group lint pillow
-18. ipython
+20. ipython
 poetry add --group dev ipython
 
 ```
