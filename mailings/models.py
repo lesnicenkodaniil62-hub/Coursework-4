@@ -1,3 +1,5 @@
+from typing import cast
+
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
@@ -20,45 +22,45 @@ class Mailing(models.Model):
         (STATUS_COMPLETED, "Завершена"),
     ]
 
-    start_time = models.DateTimeField(
+    start_time: models.DateTimeField = models.DateTimeField(
         verbose_name="Дата и время начала отправки",
         help_text="С какого момента рассылка может быть запущена",
     )
-    end_time = models.DateTimeField(
+    end_time: models.DateTimeField = models.DateTimeField(
         verbose_name="Дата и время окончания отправки",
         help_text="До какого момента разрешено выполнять отправку",
     )
-    status = models.CharField(
+    status: models.CharField = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         default=STATUS_CREATED,
         verbose_name="Статус",
     )
-    message = models.ForeignKey(
+    message: models.ForeignKey = models.ForeignKey(
         Message,
         on_delete=models.CASCADE,
         verbose_name="Сообщение",
         related_name="mailings",
         help_text="Какое письмо будет отправлено в рассылке",
     )
-    recipients = models.ManyToManyField(
+    recipients: models.ManyToManyField = models.ManyToManyField(
         Client,
         verbose_name="Получатели",
         related_name="mailings",
         help_text="Список клиентов, которые получат данную рассылку",
     )
-    owner = models.ForeignKey(
+    owner: models.ForeignKey = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         verbose_name="Владелец",
         related_name="mailings",
         help_text="Пользователь, создавший рассылку",
     )
-    created_at = models.DateTimeField(
+    created_at: models.DateTimeField = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Дата создания",
     )
-    updated_at = models.DateTimeField(
+    updated_at: models.DateTimeField = models.DateTimeField(
         auto_now=True,
         verbose_name="Дата обновления",
     )
@@ -69,7 +71,7 @@ class Mailing(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self) -> str:
-        return f"Рассылка #{self.pk} ({self.get_status_display()})"
+        return f"Рассылка #{self.pk} ({self.get_status_display()})"  # type: ignore[attr-defined]
 
     def clean(self) -> None:
         """Валидация дат."""
@@ -104,23 +106,23 @@ class MailingAttempt(models.Model):
         (STATUS_FAILED, "Не успешно"),
     ]
 
-    mailing = models.ForeignKey(
+    mailing: models.ForeignKey = models.ForeignKey(
         Mailing,
         on_delete=models.CASCADE,
         verbose_name="Рассылка",
         related_name="attempts",
         help_text="Рассылка, к которой относится попытка",
     )
-    attempt_time = models.DateTimeField(
+    attempt_time: models.DateTimeField = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Дата и время попытки",
     )
-    status = models.CharField(
+    status: models.CharField = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,
         verbose_name="Статус",
     )
-    server_response = models.TextField(
+    server_response: models.TextField = models.TextField(
         blank=True,
         null=True,
         verbose_name="Ответ почтового сервера",
@@ -133,4 +135,9 @@ class MailingAttempt(models.Model):
         ordering = ["-attempt_time"]
 
     def __str__(self) -> str:
-        return f"Попытка #{self.pk} для рассылки #{self.mailing_id} ({self.get_status_display()})"
+        # Используем cast() для явного указания типа FK-поля
+        mailing_obj = cast(Mailing, self.mailing)
+        return (
+            f"Попытка #{self.pk} для рассылки #{mailing_obj.pk} "
+            f"({self.get_status_display()})"  # type: ignore[attr-defined]
+        )

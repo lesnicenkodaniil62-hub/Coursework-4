@@ -66,7 +66,7 @@ class ClientUpdateView(LoginRequiredMixin, UpdateView):
         return Client.objects.filter(owner=user)
 
 
-class ClientDeleteView(LoginRequiredMixin, DeleteView):
+class ClientDeleteView(LoginRequiredMixin, DeleteView):  # type: ignore[misc]
     """Удаление клиента."""
 
     model = Client
@@ -74,6 +74,5 @@ class ClientDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy("clients:client_list")
 
     def get_queryset(self) -> QuerySet[Client]:
-        """Возвращает только клиентов текущего пользователя."""
         user = cast(User, self.request.user)
         return Client.objects.filter(owner=user)

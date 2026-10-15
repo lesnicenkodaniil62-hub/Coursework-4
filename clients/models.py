@@ -5,34 +5,34 @@ from django.db import models
 class Client(models.Model):
     """Модель получателя рассылки."""
 
-    email = models.EmailField(
+    email: models.EmailField = models.EmailField(
         verbose_name="Email",
         unique=True,
         help_text="Введите уникальный email получателя",
     )
-    full_name = models.CharField(
+    full_name: models.CharField = models.CharField(
         max_length=255,
         verbose_name="Ф. И. О.",
         help_text="Введите полное имя получателя",
     )
-    comment = models.TextField(
+    comment: models.TextField = models.TextField(
         blank=True,
         null=True,
         verbose_name="Комментарий",
         help_text="Дополнительная информация о получателе",
     )
-    owner = models.ForeignKey(
+    owner: models.ForeignKey = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         verbose_name="Владелец",
         related_name="clients",
         help_text="Пользователь, создавший запись",
     )
-    created_at = models.DateTimeField(
+    created_at: models.DateTimeField = models.DateTimeField(
         auto_now_add=True,
         verbose_name="Дата создания",
     )
-    updated_at = models.DateTimeField(
+    updated_at: models.DateTimeField = models.DateTimeField(
         auto_now=True,
         verbose_name="Дата обновления",
     )

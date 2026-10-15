@@ -66,7 +66,7 @@ class MessageUpdateView(LoginRequiredMixin, UpdateView):
         return Message.objects.filter(owner=user)
 
 
-class MessageDeleteView(LoginRequiredMixin, DeleteView):
+class MessageDeleteView(LoginRequiredMixin, DeleteView):  # type: ignore[misc]
     """Удаление сообщения."""
 
     model = Message
@@ -74,6 +74,5 @@ class MessageDeleteView(LoginRequiredMixin, DeleteView):
     success_url = reverse_lazy("mail_messages:message_list")
 
     def get_queryset(self) -> QuerySet[Message]:
-        """Возвращает только сообщения текущего пользователя."""
         user = cast(User, self.request.user)
         return Message.objects.filter(owner=user)

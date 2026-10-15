@@ -54,7 +54,54 @@
             <a href="{% url 'mailings:mailing_list' %}" class="btn btn-secondary">Назад</a>
             <a href="{% url 'mailings:mailing_update' mailing.pk %}" class="btn btn-warning">Редактировать</a>
             <a href="{% url 'mailings:mailing_delete' mailing.pk %}" class="btn btn-danger">Удалить</a>
+
+            {% if mailing.status == 'running' %}
+            <form method="post" action="{% url 'mailings:mailing_send' mailing.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-success" onclick="return confirm('Вы уверены, что хотите запустить рассылку?');">
+                    <i class="bi bi-send"></i> Запустить рассылку
+                </button>
+            </form>
+            {% endif %}
         </div>
     </div>
+
+    {% if mailing.attempts.exists %}
+    <div class="card mt-4">
+        <div class="card-header bg-info text-white">
+            <h3>История попыток отправки</h3>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Время попытки</th>
+                            <th>Статус</th>
+                            <th>Ответ сервера</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for attempt in mailing.attempts.all %}
+                        <tr>
+                            <td>{{ attempt.pk }}</td>
+                            <td>{{ attempt.attempt_time|date:"d.m.Y H:i:s" }}</td>
+                            <td>
+                                {% if attempt.status == 'success' %}
+                                    <span class="badge bg-success">{{ attempt.get_status_display }}</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ attempt.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ attempt.server_response|truncatewords:20 }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 {% endblock %}
