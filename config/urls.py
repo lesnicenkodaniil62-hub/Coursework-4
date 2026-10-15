@@ -24,4 +24,5 @@ urlpatterns: list[URLPattern | URLResolver] = [
     path("admin/", admin.site.urls),
     path("clients/", include("clients.urls", namespace="clients")),
     path("messages/", include("mail_messages.urls", namespace="mail_messages")),
+    path("mailings/", include("mailings.urls", namespace="mailings")),
 ]
