@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}{{ message.subject }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2>{{ message.subject }}</h2>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Тема:</div>
+                <div class="col-md-9">{{ message.subject }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Тело письма:</div>
+                <div class="col-md-9">{{ message.body|linebreaks }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Дата создания:</div>
+                <div class="col-md-9">{{ message.created_at|date:"d.m.Y H:i" }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Дата обновления:</div>
+                <div class="col-md-9">{{ message.updated_at|date:"d.m.Y H:i" }}</div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'mail_messages:message_list' %}" class="btn btn-secondary">Назад</a>
+            <a href="{% url 'mail_messages:message_update' message.pk %}" class="btn btn-warning">Редактировать</a>
+            <a href="{% url 'mail_messages:message_delete' message.pk %}" class="btn btn-danger">Удалить</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

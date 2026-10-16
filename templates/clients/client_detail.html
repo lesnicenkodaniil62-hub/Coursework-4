@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}{{ client.full_name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2>{{ client.full_name }}</h2>
+        </div>
+        <div class="card-body">
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Email:</div>
+                <div class="col-md-9">{{ client.email }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Комментарий:</div>
+                <div class="col-md-9">{{ client.comment|default:"—" }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Дата создания:</div>
+                <div class="col-md-9">{{ client.created_at|date:"d.m.Y H:i" }}</div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-3 fw-bold">Дата обновления:</div>
+                <div class="col-md-9">{{ client.updated_at|date:"d.m.Y H:i" }}</div>
+            </div>
+        </div>
+        <div class="card-footer">
+            <a href="{% url 'clients:client_list' %}" class="btn btn-secondary">Назад</a>
+            <a href="{% url 'clients:client_update' client.pk %}" class="btn btn-warning">Редактировать</a>
+            <a href="{% url 'clients:client_delete' client.pk %}" class="btn btn-danger">Удалить</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
