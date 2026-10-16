@@ -1,0 +1,55 @@
+[
+  {
+    "model": "clients.client",
+    "pk": 100,
+    "fields": {
+      "email": "demo.ivan@example.com",
+      "full_name": "Демо Иванов Иван",
+      "comment": "Демонстрационный клиент №1",
+      "owner": 1
+    }
+  },
+  {
+    "model": "clients.client",
+    "pk": 101,
+    "fields": {
+      "email": "demo.petra@example.com",
+      "full_name": "Демо Петрова Анна",
+      "comment": "Демонстрационный клиент №2",
+      "owner": 1
+    }
+  },
+  {
+    "model": "mail_messages.message",
+    "pk": 100,
+    "fields": {
+      "subject": "Спецпредложение для наших клиентов",
+      "body": "Здравствуйте!\n\nДля вас действует специальное предложение.\n\nС уважением, команда Messenger.",
+      "owner": 1
+    }
+  },
+  {
+    "model": "mailings.mailing",
+    "pk": 100,
+    "fields": {
+      "start_time": "2026-10-01T00:00:00Z",
+      "end_time": "2026-12-31T23:59:59Z",
+      "status": "running",
+      "message": 100,
+      "owner": 1,
+      "recipients": [100, 101]
+    }
+  },
+  {
+    "model": "mailings.mailing",
+    "pk": 101,
+    "fields": {
+      "start_time": "2027-01-01T00:00:00Z",
+      "end_time": "2027-01-31T23:59:59Z",
+      "status": "created",
+      "message": 100,
+      "owner": 1,
+      "recipients": [100]
+    }
+  }
+]

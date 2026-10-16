@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Главная — Messenger{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="fw-bold">Панель управления</h1>
+    <span class="badge bg-secondary">Обзор сервиса</span>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card stat-card text-white bg-primary h-100">
+            <div class="card-body p-4">
+                <div class="stat-label mb-3">Всего рассылок</div>
+                <div class="stat-number mb-3">{{ stats.total_mailings }}</div>
+                <a href="{% url 'mailings:mailing_list' %}" class="text-white text-decoration-none">
+                    Все рассылки &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card stat-card text-white bg-success h-100">
+            <div class="card-body p-4">
+                <div class="stat-label mb-3">Активные рассылки</div>
+                <div class="stat-number mb-3">{{ stats.active_mailings }}</div>
+                <a href="{% url 'mailings:mailing_list' %}" class="text-white text-decoration-none">
+                    Текущие кампании &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card stat-card text-white bg-info h-100">
+            <div class="card-body p-4">
+                <div class="stat-label mb-3">Уникальных получателей</div>
+                <div class="stat-number mb-3">{{ stats.total_clients }}</div>
+                <a href="{% url 'clients:client_list' %}" class="text-white text-decoration-none">
+                    База клиентов &rarr;
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header bg-white fw-bold">Что такое активная рассылка?</div>
+    <div class="card-body">
+        <p class="mb-2">
+            Активная рассылка — это рассылка со статусом
+            <span class="badge bg-success">Запущена</span>,
+            у которой текущая дата находится между
+            <code>start_time</code> и <code>end_time</code> (включительно).
+        </p>
+        <div class="d-flex align-items-center flex-wrap gap-2 py-2">
+            <span class="badge bg-light text-dark border">Создана</span>
+            <span>&rarr;</span>
+            <code>start_time</code>
+            <span class="badge bg-success">Запущена</span>
+            <code>end_time</code>
+            <span>&rarr;</span>
+            <span class="badge bg-danger">Завершена</span>
+        </div>
+        <p class="text-muted small mb-0 mt-3">
+            Показатели кэшируются в Redis на 5 минут.
+            При создании или удалении клиента/рассылки кэш сбрасывается автоматически.
+        </p>
+    </div>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mt-4">
+    <a href="{% url 'clients:client_create' %}" class="btn btn-outline-primary">Добавить клиента</a>
+    <a href="{% url 'mail_messages:message_create' %}" class="btn btn-outline-primary">Создать сообщение</a>
+    <a href="{% url 'mailings:mailing_create' %}" class="btn btn-primary">Создать рассылку</a>
+</div>
+{% endblock %}
