@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from users.mixins import OwnerFilterMixin
+from users.mixins import OwnerFilterMixin, OwnerOnlyMixin
 
 from .forms import ClientForm
 from .models import Client
@@ -43,7 +43,7 @@ class ClientCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class ClientUpdateView(LoginRequiredMixin, OwnerFilterMixin, UpdateView):
+class ClientUpdateView(LoginRequiredMixin, OwnerOnlyMixin, UpdateView):
     """Редактирование клиента."""
 
     model = Client
@@ -52,7 +52,7 @@ class ClientUpdateView(LoginRequiredMixin, OwnerFilterMixin, UpdateView):
     success_url = reverse_lazy("clients:client_list")
 
 
-class ClientDeleteView(LoginRequiredMixin, OwnerFilterMixin, DeleteView):  # type: ignore[misc]
+class ClientDeleteView(LoginRequiredMixin, OwnerOnlyMixin, DeleteView):  # type: ignore[misc]
     """Удаление клиента."""
 
     model = Client
