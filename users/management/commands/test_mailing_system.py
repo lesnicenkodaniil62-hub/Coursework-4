@@ -58,7 +58,7 @@ class Command(BaseCommand):
 
     def handle(self, *args: Any, **options: Any) -> None:
         """Основная логика команды."""
-        self.stdout.write(self.style.SUCCESS("\n🚀 Начинаем тестирование системы рассылок\n"))
+        self.stdout.write(self.style.SUCCESS("\nНачинаем тестирование системы рассылок\n"))
 
         # Собираем параметры
         users_count: int = options["users"]
@@ -80,7 +80,7 @@ class Command(BaseCommand):
 
         # Предварительная очистка, если запрошена
         if cleanup_first:
-            self.stdout.write(self.style.WARNING("🧹 Предварительная очистка старых тестовых данных..."))
+            self.stdout.write(self.style.WARNING("Предварительная очистка старых тестовых данных..."))
             self._cleanup_by_prefix()
 
         # Убедимся, что группы существуют
@@ -120,7 +120,7 @@ class Command(BaseCommand):
         """Создаёт группы, если их нет."""
         Group.objects.get_or_create(name="Пользователь")
         Group.objects.get_or_create(name="Менеджер")
-        self.stdout.write("✓ Группы 'Пользователь' и 'Менеджер' проверены")
+        self.stdout.write("Группы 'Пользователь' и 'Менеджер' проверены")
 
     def _create_test_users(
         self,
@@ -285,7 +285,7 @@ class Command(BaseCommand):
         success_rate = (stats["attempts_success"] / total_attempts * 100) if total_attempts > 0 else 0
 
         self.stdout.write(self.style.SUCCESS("\n" + "=" * 60))
-        self.stdout.write(self.style.SUCCESS("📊 ОТЧЁТ О ТЕСТИРОВАНИИ"))
+        self.stdout.write(self.style.SUCCESS("ОТЧЁТ О ТЕСТИРОВАНИИ"))
         self.stdout.write(self.style.SUCCESS("=" * 60))
 
         self.stdout.write(f"\nСоздано пользователей:        {stats['users_created']}")
@@ -298,7 +298,7 @@ class Command(BaseCommand):
         self.stdout.write(f"Процент успешных отправок:   {success_rate:.1f}%")
 
         self.stdout.write(self.style.SUCCESS("\n" + "=" * 60))
-        self.stdout.write(self.style.SUCCESS("🎉 Тестирование завершено успешно!"))
+        self.stdout.write(self.style.SUCCESS("Тестирование завершено успешно!"))
         self.stdout.write(self.style.SUCCESS("=" * 60 + "\n"))
 
     def _cleanup(self, test_users: list[User]) -> None:
