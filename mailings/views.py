@@ -13,7 +13,7 @@ from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from mail_messages.models import Message
-from users.mixins import OwnerFilterMixin
+from users.mixins import ManagerRequiredMixin, OwnerFilterMixin, OwnerOnlyMixin
 
 from .forms import MailingForm
 from .models import Mailing, MailingAttempt
@@ -63,7 +63,7 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class MailingUpdateView(LoginRequiredMixin, OwnerFilterMixin, UpdateView):
+class MailingUpdateView(LoginRequiredMixin, OwnerOnlyMixin, UpdateView):
     """Редактирование рассылки."""
 
     model = Mailing
@@ -78,7 +78,7 @@ class MailingUpdateView(LoginRequiredMixin, OwnerFilterMixin, UpdateView):
         return kwargs
 
 
-class MailingDeleteView(LoginRequiredMixin, OwnerFilterMixin, DeleteView):  # type: ignore[misc]
+class MailingDeleteView(LoginRequiredMixin, OwnerOnlyMixin, DeleteView):  # type: ignore[misc]
     """Удаление рассылки."""
 
     model = Mailing
@@ -153,3 +153,15 @@ class MailingSendView(LoginRequiredMixin, View):
         messages.success(request, f"Рассылка завершена. Успешно: {success_count}, Ошибок: {fail_count}.")
 
         return redirect("mailings:mailing_detail", pk=pk)
+
+
+class MailingDisableView(ManagerRequiredMixin, View):
+    """Отключение рассылки (только для менеджеров)."""
+
+    def post(self, request: HttpRequest, pk: int) -> HttpResponse:
+        """Отключает рассылку, устанавливая статус 'Завершена'."""
+        mailing = get_object_or_404(Mailing, pk=pk)
+        mailing.status = Mailing.STATUS_COMPLETED
+        mailing.save(update_fields=["status", "updated_at"])
+        messages.success(request, f"Рассылка #{pk} отключена.")
+        return redirect("mailings:mailing_list")

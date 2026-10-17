@@ -76,6 +76,13 @@ class Mailing(models.Model):
     def clean(self) -> None:
         """Валидация дат."""
         super().clean()
+        now = timezone.now()
+
+        # Проверка: start_time не может быть в прошлом
+        if self.start_time and self.start_time < now:
+            raise ValidationError({"start_time": "Дата начала не может быть в прошлом."})
+
+        # Проверка: start_time должен быть раньше end_time
         if self.start_time and self.end_time:
             if self.start_time >= self.end_time:
                 raise ValidationError({"end_time": "Дата окончания должна быть позже даты начала."})
@@ -135,7 +142,6 @@ class MailingAttempt(models.Model):
         ordering = ["-attempt_time"]
 
     def __str__(self) -> str:
-        # Используем cast() для явного указания типа FK-поля
         mailing_obj = cast(Mailing, self.mailing)
         return (
             f"Попытка #{self.pk} для рассылки #{mailing_obj.pk} "

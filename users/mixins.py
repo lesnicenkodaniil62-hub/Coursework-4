@@ -27,7 +27,7 @@ class ManagerRequiredMixin(UserPassesTestMixin):
 
 
 class OwnerFilterMixin:
-    """Миксин для фильтрации данных по владельцу (для обычных пользователей)."""
+    """Миксин для фильтрации данных по владельцу (для просмотра)."""
 
     request: "HttpRequest"
 
@@ -41,4 +41,16 @@ class OwnerFilterMixin:
             return queryset
 
         # Иначе фильтруем по владельцу
+        return queryset.filter(owner=user)
+
+
+class OwnerOnlyMixin:
+    """Миксин для фильтрации данных только по владельцу (для редактирования/удаления)."""
+
+    request: "HttpRequest"
+
+    def get_queryset(self) -> QuerySet[Any]:
+        """Возвращает только свои объекты (даже для менеджеров)."""
+        queryset: QuerySet[Any] = super().get_queryset()  # type: ignore[misc]
+        user = cast(User, self.request.user)
         return queryset.filter(owner=user)

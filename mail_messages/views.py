@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
-from users.mixins import OwnerFilterMixin
+from users.mixins import OwnerFilterMixin, OwnerOnlyMixin
 
 from .forms import MessageForm
 from .models import Message
@@ -43,7 +43,7 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class MessageUpdateView(LoginRequiredMixin, OwnerFilterMixin, UpdateView):
+class MessageUpdateView(LoginRequiredMixin, OwnerOnlyMixin, UpdateView):
     """Редактирование сообщения."""
 
     model = Message
@@ -52,7 +52,7 @@ class MessageUpdateView(LoginRequiredMixin, OwnerFilterMixin, UpdateView):
     success_url = reverse_lazy("mail_messages:message_list")
 
 
-class MessageDeleteView(LoginRequiredMixin, OwnerFilterMixin, DeleteView):  # type: ignore[misc]
+class MessageDeleteView(LoginRequiredMixin, OwnerOnlyMixin, DeleteView):  # type: ignore[misc]
     """Удаление сообщения."""
 
     model = Message

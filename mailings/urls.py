@@ -6,9 +6,10 @@ app_name = "mailings"
 
 urlpatterns = [
     path("", views.MailingListView.as_view(), name="mailing_list"),
-    path("<int:pk>/", views.MailingDetailView.as_view(), name="mailing_detail"),
     path("create/", views.MailingCreateView.as_view(), name="mailing_create"),
+    path("<int:pk>/", views.MailingDetailView.as_view(), name="mailing_detail"),
     path("<int:pk>/update/", views.MailingUpdateView.as_view(), name="mailing_update"),
     path("<int:pk>/delete/", views.MailingDeleteView.as_view(), name="mailing_delete"),
     path("<int:pk>/send/", views.MailingSendView.as_view(), name="mailing_send"),
+    path("<int:pk>/disable/", views.MailingDisableView.as_view(), name="mailing_disable"),
 ]
