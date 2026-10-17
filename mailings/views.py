@@ -13,12 +13,13 @@ from django.views import View
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
 
 from mail_messages.models import Message
+from users.mixins import OwnerFilterMixin
 
 from .forms import MailingForm
 from .models import Mailing, MailingAttempt
 
 
-class MailingListView(LoginRequiredMixin, ListView):
+class MailingListView(LoginRequiredMixin, OwnerFilterMixin, ListView):
     """Список всех рассылок текущего пользователя."""
 
     model = Mailing
@@ -26,23 +27,13 @@ class MailingListView(LoginRequiredMixin, ListView):
     context_object_name = "mailings"
     paginate_by = 10
 
-    def get_queryset(self) -> QuerySet[Mailing]:
-        """Возвращает только рассылки текущего пользователя."""
-        user = cast(User, self.request.user)
-        return Mailing.objects.filter(owner=user)
 
-
-class MailingDetailView(LoginRequiredMixin, DetailView):
+class MailingDetailView(LoginRequiredMixin, OwnerFilterMixin, DetailView):
     """Детальная информация о рассылке."""
 
     model = Mailing
     template_name = "mailings/mailing_detail.html"
     context_object_name = "mailing"
-
-    def get_queryset(self) -> QuerySet[Mailing]:
-        """Возвращает только рассылки текущего пользователя."""
-        user = cast(User, self.request.user)
-        return Mailing.objects.filter(owner=user)
 
     def get_object(self, queryset: QuerySet[Mailing] | None = None) -> Mailing:
         """Переопределяем для вызова update_status()."""
@@ -72,18 +63,13 @@ class MailingCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class MailingUpdateView(LoginRequiredMixin, UpdateView):
+class MailingUpdateView(LoginRequiredMixin, OwnerFilterMixin, UpdateView):
     """Редактирование рассылки."""
 
     model = Mailing
     form_class = MailingForm
     template_name = "mailings/mailing_form.html"
     success_url = reverse_lazy("mailings:mailing_list")
-
-    def get_queryset(self) -> QuerySet[Mailing]:
-        """Возвращает только рассылки текущего пользователя."""
-        user = cast(User, self.request.user)
-        return Mailing.objects.filter(owner=user)
 
     def get_form_kwargs(self) -> dict[str, Any]:
         """Передаём пользователя в форму."""
@@ -92,17 +78,12 @@ class MailingUpdateView(LoginRequiredMixin, UpdateView):
         return kwargs
 
 
-class MailingDeleteView(LoginRequiredMixin, DeleteView):  # type: ignore[misc]
+class MailingDeleteView(LoginRequiredMixin, OwnerFilterMixin, DeleteView):  # type: ignore[misc]
     """Удаление рассылки."""
 
     model = Mailing
     template_name = "mailings/mailing_confirm_delete.html"
     success_url = reverse_lazy("mailings:mailing_list")
-
-    def get_queryset(self) -> QuerySet[Mailing]:
-        """Возвращает только рассылки текущего пользователя."""
-        user = cast(User, self.request.user)
-        return Mailing.objects.filter(owner=user)
 
 
 class MailingSendView(LoginRequiredMixin, View):
@@ -134,7 +115,6 @@ class MailingSendView(LoginRequiredMixin, View):
             messages.warning(request, "У рассылки нет получателей.")
             return redirect("mailings:mailing_detail", pk=pk)
 
-        # Явно приводим тип FK-поля к Message
         message_obj = cast(Message, mailing.message)
 
         attempts_data = []

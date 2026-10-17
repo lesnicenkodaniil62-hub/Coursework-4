@@ -2,6 +2,7 @@ from typing import Any, cast
 
 from django.contrib import messages
 from django.contrib.auth import login
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
 from django.contrib.auth.views import (
@@ -12,13 +13,16 @@ from django.contrib.auth.views import (
     PasswordResetDoneView,
     PasswordResetView,
 )
+from django.core.exceptions import PermissionDenied
 from django.core.mail import send_mail
+from django.db.models import QuerySet
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, TemplateView, View
+from django.views.generic import CreateView, ListView, TemplateView, View
 
 from .forms import CustomUserCreationForm
+from .mixins import ManagerRequiredMixin
 from .models import UserProfile
 from .services import get_user_stats
 
@@ -128,3 +132,55 @@ class UserStatsView(LoginRequiredMixin, TemplateView):
         user = cast(User, self.request.user)
         context["stats"] = get_user_stats(user)
         return context
+
+
+class UserManagementView(ManagerRequiredMixin, ListView):
+    """Управление пользователями (только для менеджеров)."""
+
+    model = User
+    template_name = "users/user_management.html"
+    context_object_name = "users"
+    paginate_by = 20
+
+    def get_queryset(self) -> QuerySet[User]:
+        """Возвращает всех пользователей, кроме суперпользователей."""
+        return User.objects.filter(is_superuser=False).order_by("-date_joined")
+
+
+@login_required
+def block_user(request: HttpRequest, pk: int) -> HttpResponse:
+    """Блокирует пользователя (только для менеджеров)."""
+    user = cast(User, request.user)
+    if not user.groups.filter(name="Менеджер").exists():
+        raise PermissionDenied("Доступ разрешён только менеджерам.")
+
+    target_user = get_object_or_404(User, pk=pk, is_superuser=False)
+
+    # Менеджер не может заблокировать другого менеджера
+    if target_user.groups.filter(name="Менеджер").exists():
+        messages.error(request, "Нельзя заблокировать другого менеджера.")
+        return redirect("users:user_management")
+
+    # Менеджер не может заблокировать себя
+    if target_user == user:
+        messages.error(request, "Нельзя заблокировать себя.")
+        return redirect("users:user_management")
+
+    target_user.is_active = False
+    target_user.save(update_fields=["is_active"])
+    messages.success(request, f"Пользователь {target_user.username} заблокирован.")
+    return redirect("users:user_management")
+
+
+@login_required
+def unblock_user(request: HttpRequest, pk: int) -> HttpResponse:
+    """Разблокирует пользователя (только для менеджеров)."""
+    user = cast(User, request.user)
+    if not user.groups.filter(name="Менеджер").exists():
+        raise PermissionDenied("Доступ разрешён только менеджерам.")
+
+    target_user = get_object_or_404(User, pk=pk, is_superuser=False)
+    target_user.is_active = True
+    target_user.save(update_fields=["is_active"])
+    messages.success(request, f"Пользователь {target_user.username} разблокирован.")
+    return redirect("users:user_management")
