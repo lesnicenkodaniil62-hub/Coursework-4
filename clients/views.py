@@ -2,15 +2,16 @@ from typing import Any, cast
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.db.models import QuerySet
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+
+from users.mixins import OwnerFilterMixin
 
 from .forms import ClientForm
 from .models import Client
 
 
-class ClientListView(LoginRequiredMixin, ListView):
+class ClientListView(LoginRequiredMixin, OwnerFilterMixin, ListView):
     """Список всех клиентов текущего пользователя."""
 
     model = Client
@@ -18,23 +19,13 @@ class ClientListView(LoginRequiredMixin, ListView):
     context_object_name = "clients"
     paginate_by = 10
 
-    def get_queryset(self) -> QuerySet[Client]:
-        """Возвращает только клиентов текущего пользователя."""
-        user = cast(User, self.request.user)
-        return Client.objects.filter(owner=user)
 
-
-class ClientDetailView(LoginRequiredMixin, DetailView):
+class ClientDetailView(LoginRequiredMixin, OwnerFilterMixin, DetailView):
     """Детальная информация о клиенте."""
 
     model = Client
     template_name = "clients/client_detail.html"
     context_object_name = "client"
-
-    def get_queryset(self) -> QuerySet[Client]:
-        """Возвращает только клиентов текущего пользователя."""
-        user = cast(User, self.request.user)
-        return Client.objects.filter(owner=user)
 
 
 class ClientCreateView(LoginRequiredMixin, CreateView):
@@ -52,7 +43,7 @@ class ClientCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class ClientUpdateView(LoginRequiredMixin, UpdateView):
+class ClientUpdateView(LoginRequiredMixin, OwnerFilterMixin, UpdateView):
     """Редактирование клиента."""
 
     model = Client
@@ -60,19 +51,10 @@ class ClientUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "clients/client_form.html"
     success_url = reverse_lazy("clients:client_list")
 
-    def get_queryset(self) -> QuerySet[Client]:
-        """Возвращает только клиентов текущего пользователя."""
-        user = cast(User, self.request.user)
-        return Client.objects.filter(owner=user)
 
-
-class ClientDeleteView(LoginRequiredMixin, DeleteView):  # type: ignore[misc]
+class ClientDeleteView(LoginRequiredMixin, OwnerFilterMixin, DeleteView):  # type: ignore[misc]
     """Удаление клиента."""
 
     model = Client
     template_name = "clients/client_confirm_delete.html"
     success_url = reverse_lazy("clients:client_list")
-
-    def get_queryset(self) -> QuerySet[Client]:
-        user = cast(User, self.request.user)
-        return Client.objects.filter(owner=user)

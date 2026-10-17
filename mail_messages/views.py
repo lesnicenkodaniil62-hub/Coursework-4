@@ -2,15 +2,16 @@ from typing import Any, cast
 
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.models import User
-from django.db.models import QuerySet
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, UpdateView
+
+from users.mixins import OwnerFilterMixin
 
 from .forms import MessageForm
 from .models import Message
 
 
-class MessageListView(LoginRequiredMixin, ListView):
+class MessageListView(LoginRequiredMixin, OwnerFilterMixin, ListView):
     """Список всех сообщений текущего пользователя."""
 
     model = Message
@@ -18,23 +19,13 @@ class MessageListView(LoginRequiredMixin, ListView):
     context_object_name = "messages"
     paginate_by = 10
 
-    def get_queryset(self) -> QuerySet[Message]:
-        """Возвращает только сообщения текущего пользователя."""
-        user = cast(User, self.request.user)
-        return Message.objects.filter(owner=user)
 
-
-class MessageDetailView(LoginRequiredMixin, DetailView):
+class MessageDetailView(LoginRequiredMixin, OwnerFilterMixin, DetailView):
     """Детальная информация о сообщении."""
 
     model = Message
     template_name = "mail_messages/message_detail.html"
     context_object_name = "message"
-
-    def get_queryset(self) -> QuerySet[Message]:
-        """Возвращает только сообщения текущего пользователя."""
-        user = cast(User, self.request.user)
-        return Message.objects.filter(owner=user)
 
 
 class MessageCreateView(LoginRequiredMixin, CreateView):
@@ -52,7 +43,7 @@ class MessageCreateView(LoginRequiredMixin, CreateView):
         return super().form_valid(form)
 
 
-class MessageUpdateView(LoginRequiredMixin, UpdateView):
+class MessageUpdateView(LoginRequiredMixin, OwnerFilterMixin, UpdateView):
     """Редактирование сообщения."""
 
     model = Message
@@ -60,19 +51,10 @@ class MessageUpdateView(LoginRequiredMixin, UpdateView):
     template_name = "mail_messages/message_form.html"
     success_url = reverse_lazy("mail_messages:message_list")
 
-    def get_queryset(self) -> QuerySet[Message]:
-        """Возвращает только сообщения текущего пользователя."""
-        user = cast(User, self.request.user)
-        return Message.objects.filter(owner=user)
 
-
-class MessageDeleteView(LoginRequiredMixin, DeleteView):  # type: ignore[misc]
+class MessageDeleteView(LoginRequiredMixin, OwnerFilterMixin, DeleteView):  # type: ignore[misc]
     """Удаление сообщения."""
 
     model = Message
     template_name = "mail_messages/message_confirm_delete.html"
     success_url = reverse_lazy("mail_messages:message_list")
-
-    def get_queryset(self) -> QuerySet[Message]:
-        user = cast(User, self.request.user)
-        return Message.objects.filter(owner=user)

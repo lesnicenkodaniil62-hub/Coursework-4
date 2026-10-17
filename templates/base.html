@@ -43,6 +43,15 @@
                             {{ user.username }}
                         </a>
                     </li>
+                    {% for group in user.groups.all %}
+                        {% if group.name == "Менеджер" %}
+                        <li class="nav-item">
+                            <a class="nav-link text-warning" href="{% url 'users:user_management' %}">
+                                Управление пользователями
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
                     <li class="nav-item">
                         <form method="post" action="{% url 'users:logout' %}" class="d-inline">
                             {% csrf_token %}
