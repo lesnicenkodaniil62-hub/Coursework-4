@@ -11,6 +11,7 @@ urlpatterns = [
     path("verify-sent/", TemplateView.as_view(template_name="users/verify_email_sent.html"), name="verify_email_sent"),
     path("login/", views.CustomLoginView.as_view(), name="login"),
     path("logout/", views.CustomLogoutView.as_view(), name="logout"),
+    path("stats/", views.UserStatsView.as_view(), name="user_stats"),  # <-- НОВОЕ
     # Восстановление пароля
     path("password-reset/", views.CustomPasswordResetView.as_view(), name="password_reset"),
     path("password-reset/done/", views.CustomPasswordResetDoneView.as_view(), name="password_reset_done"),

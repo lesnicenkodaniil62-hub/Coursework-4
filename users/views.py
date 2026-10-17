@@ -1,7 +1,9 @@
-from typing import Any
+from typing import Any, cast
 
 from django.contrib import messages
 from django.contrib.auth import login
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.models import User
 from django.contrib.auth.views import (
     LoginView,
     LogoutView,
@@ -14,10 +16,11 @@ from django.core.mail import send_mail
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic import CreateView, View
+from django.views.generic import CreateView, TemplateView, View
 
 from .forms import CustomUserCreationForm
 from .models import UserProfile
+from .services import get_user_stats
 
 
 class RegisterView(CreateView):
@@ -81,7 +84,10 @@ class CustomLoginView(LoginView):
     def form_valid(self, form: Any) -> HttpResponse:
         user = form.get_user()
         if hasattr(user, "profile") and not user.profile.is_email_verified:
-            messages.error(request=self.request, message="Пожалуйста, подтвердите ваш email перед входом.")
+            messages.error(
+                request=self.request,
+                message="Пожалуйста, подтвердите ваш email перед входом.",
+            )
             return redirect("users:login")
         return super().form_valid(form)
 
@@ -95,7 +101,7 @@ class CustomLogoutView(LogoutView):
 # Встроенные представления Django для сброса пароля
 class CustomPasswordResetView(PasswordResetView):
     template_name = "users/password_reset.html"
-    email_template_name = "users/password_reset_email.txt"  # Можно создать отдельно, или использовать дефолтный
+    email_template_name = "users/password_reset_email.txt"
     success_url = reverse_lazy("users:password_reset_done")
 
 
@@ -110,3 +116,15 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = "users/password_reset_complete.html"
+
+
+class UserStatsView(LoginRequiredMixin, TemplateView):
+    """Персональная статистика пользователя."""
+
+    template_name = "users/user_stats.html"
+
+    def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+        context: dict[str, Any] = super().get_context_data(**kwargs)
+        user = cast(User, self.request.user)
+        context["stats"] = get_user_stats(user)
+        return context
