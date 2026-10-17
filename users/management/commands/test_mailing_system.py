@@ -1,3 +1,4 @@
+import random
 from datetime import timedelta
 from typing import Any
 
@@ -49,6 +50,11 @@ class Command(BaseCommand):
             action="store_true",
             help="Не удалять тестовые данные после выполнения",
         )
+        parser.add_argument(
+            "--cleanup-first",
+            action="store_true",
+            help="Очистить старые тестовые данные перед запуском",
+        )
 
     def handle(self, *args: Any, **options: Any) -> None:
         """Основная логика команды."""
@@ -60,9 +66,10 @@ class Command(BaseCommand):
         messages_per_user: int = options["messages_per_user"]
         mailings_per_user: int = options["mailings_per_user"]
         no_cleanup: bool = options["no_cleanup"]
+        cleanup_first: bool = options["cleanup_first"]
 
         # Счётчики для отчёта
-        stats = {
+        stats: dict[str, int] = {
             "users_created": 0,
             "clients_created": 0,
             "messages_created": 0,
@@ -70,6 +77,11 @@ class Command(BaseCommand):
             "attempts_success": 0,
             "attempts_failed": 0,
         }
+
+        # Предварительная очистка, если запрошена
+        if cleanup_first:
+            self.stdout.write(self.style.WARNING("🧹 Предварительная очистка старых тестовых данных..."))
+            self._cleanup_by_prefix()
 
         # Убедимся, что группы существуют
         self._ensure_groups_exist()
@@ -93,12 +105,12 @@ class Command(BaseCommand):
             # Самоочистка
             if not no_cleanup:
                 self._cleanup(test_users)
-                self.stdout.write(self.style.SUCCESS("\n✅ Тестовые данные удалены\n"))
+                self.stdout.write(self.style.SUCCESS("\nТестовые данные удалены\n"))
             else:
-                self.stdout.write(self.style.WARNING("\n⚠️  Тестовые данные сохранены (флаг --no-cleanup)\n"))
+                self.stdout.write(self.style.WARNING("\nТестовые данные сохранены (флаг --no-cleanup)\n"))
 
         except Exception as e:
-            self.stdout.write(self.style.ERROR(f"\n❌ Ошибка при выполнении: {e}\n"))
+            self.stdout.write(self.style.ERROR(f"\nОшибка при выполнении: {e}\n"))
             if not no_cleanup:
                 self.stdout.write(self.style.WARNING("Попытка самоочистки...\n"))
                 self._cleanup_by_prefix()
@@ -126,14 +138,25 @@ class Command(BaseCommand):
             email = f"{username}{self.TEST_EMAIL_DOMAIN}"
             password = "testpassword123"
 
-            user = User.objects.create_user(
+            # Используем get_or_create для идемпотентности
+            user, created = User.objects.get_or_create(
                 username=username,
-                email=email,
-                password=password,
-                is_active=True,
+                defaults={
+                    "email": email,
+                    "is_active": True,
+                },
             )
-            user.groups.add(Group.objects.get(name="Пользователь"))
-            stats["users_created"] += 1
+            if created:
+                user.set_password(password)
+                user.save()
+                stats["users_created"] += 1
+                self.stdout.write(f"Пользователь '{username}' создан")
+            else:
+                self.stdout.write(f"Пользователь '{username}' уже существует, используем его")
+
+            # Убедимся, что пользователь в группе "Пользователь"
+            user_group = Group.objects.get(name="Пользователь")
+            user.groups.add(user_group)
 
             # Создаём клиентов
             self._create_test_clients(user, clients_per_user, stats)
@@ -145,15 +168,19 @@ class Command(BaseCommand):
             self._create_test_mailings(user, mailings_per_user, stats)
 
             test_users.append(user)
-            self.stdout.write(f"✓ Пользователь '{username}' создан с данными")
 
         return test_users
 
     def _create_test_clients(self, user: User, count: int, stats: dict[str, int]) -> None:
         """Создаёт тестовых клиентов для пользователя."""
         for i in range(1, count + 1):
+            email = f"{self.TEST_PREFIX}client_{user.pk}_{i}{self.TEST_EMAIL_DOMAIN}"
+            # Проверяем, не создан ли уже такой клиент
+            if Client.objects.filter(email=email).exists():
+                continue
+
             Client.objects.create(
-                email=f"{self.TEST_PREFIX}client_{user.pk}_{i}{self.TEST_EMAIL_DOMAIN}",
+                email=email,
                 full_name=f"Тестовый Клиент {i} (Пользователь {user.pk})",
                 comment=f"Создан командой test_mailing_system для пользователя {user.username}",
                 owner=user,
@@ -163,8 +190,13 @@ class Command(BaseCommand):
     def _create_test_messages(self, user: User, count: int, stats: dict[str, int]) -> None:
         """Создаёт тестовые сообщения для пользователя."""
         for i in range(1, count + 1):
+            subject = f"Тестовое сообщение {i} от {user.username}"
+            # Проверяем, не создано ли уже такое сообщение
+            if Message.objects.filter(subject=subject, owner=user).exists():
+                continue
+
             Message.objects.create(
-                subject=f"Тестовое сообщение {i} от {user.username}",
+                subject=subject,
                 body=(
                     f"Здравствуйте!\n\n"
                     f"Это тестовое сообщение #{i} от пользователя {user.username}.\n\n"
@@ -184,7 +216,12 @@ class Command(BaseCommand):
         if not clients or not messages:
             return
 
-        for i in range(1, count + 1):
+        # Если у пользователя уже есть рассылки, не создаём новые
+        existing_mailings_count = Mailing.objects.filter(owner=user).count()
+        if existing_mailings_count >= count:
+            return
+
+        for i in range(existing_mailings_count + 1, count + 1):
             # Чередование: одна рассылка активная, другая будущая
             if i % 2 == 1:
                 # Активная рассылка (в текущем временном окне)
@@ -209,7 +246,7 @@ class Command(BaseCommand):
 
     def _execute_mailings(self, test_users: list[User], stats: dict[str, int]) -> None:
         """Выполняет тестовые рассылки (создаёт попытки)."""
-        self.stdout.write("\n📧 Выполняем рассылки...")
+        self.stdout.write("\nВыполняем рассылки...")
 
         for user in test_users:
             active_mailings = Mailing.objects.filter(
@@ -218,11 +255,13 @@ class Command(BaseCommand):
             )
 
             for mailing in active_mailings:
+                # Пропускаем рассылки, у которых уже есть попытки
+                if mailing.attempts.exists():  # type: ignore[attr-defined]
+                    continue
+
                 recipients = mailing.recipients.all()
                 for client in recipients:
                     # Имитация отправки: 80% успех, 20% ошибка
-                    import random
-
                     if random.random() < 0.8:
                         MailingAttempt.objects.create(
                             mailing=mailing,
@@ -249,14 +288,14 @@ class Command(BaseCommand):
         self.stdout.write(self.style.SUCCESS("📊 ОТЧЁТ О ТЕСТИРОВАНИИ"))
         self.stdout.write(self.style.SUCCESS("=" * 60))
 
-        self.stdout.write(f"\n👥 Создано пользователей:        {stats['users_created']}")
-        self.stdout.write(f"📋 Создано клиентов:           {stats['clients_created']}")
-        self.stdout.write(f"✉️  Создано сообщений:          {stats['messages_created']}")
-        self.stdout.write(f"📬 Создано рассылок:           {stats['mailings_created']}")
+        self.stdout.write(f"\nСоздано пользователей:        {stats['users_created']}")
+        self.stdout.write(f"Создано клиентов:           {stats['clients_created']}")
+        self.stdout.write(f"Создано сообщений:          {stats['messages_created']}")
+        self.stdout.write(f"Создано рассылок:           {stats['mailings_created']}")
 
-        self.stdout.write(f"\n✅ Успешных попыток отправки:   {stats['attempts_success']}")
-        self.stdout.write(f"❌ Неуспешных попыток:          {stats['attempts_failed']}")
-        self.stdout.write(f"📈 Процент успешных отправок:   {success_rate:.1f}%")
+        self.stdout.write(f"\nУспешных попыток отправки:   {stats['attempts_success']}")
+        self.stdout.write(f"Неуспешных попыток:          {stats['attempts_failed']}")
+        self.stdout.write(f"Процент успешных отправок:   {success_rate:.1f}%")
 
         self.stdout.write(self.style.SUCCESS("\n" + "=" * 60))
         self.stdout.write(self.style.SUCCESS("🎉 Тестирование завершено успешно!"))
@@ -282,6 +321,7 @@ class Command(BaseCommand):
         with transaction.atomic():
             # Находим всех тестовых пользователей
             test_users = User.objects.filter(username__startswith=self.TEST_PREFIX)
+            count = test_users.count()
 
             for user in test_users:
                 MailingAttempt.objects.filter(mailing__owner=user).delete()
@@ -290,4 +330,4 @@ class Command(BaseCommand):
                 Client.objects.filter(owner=user).delete()
                 user.delete()
 
-            self.stdout.write(self.style.WARNING(f"Удалено тестовых пользователей: {test_users.count()}"))
+            self.stdout.write(self.style.WARNING(f"Удалено тестовых пользователей: {count}"))
