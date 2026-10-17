@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Моя статистика{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="fw-bold">Моя статистика</h1>
+    <span class="badge bg-primary">Пользователь: {{ user.username }}</span>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card text-white bg-primary h-100">
+            <div class="card-body p-4 text-center">
+                <div class="stat-label mb-3">Всего рассылок</div>
+                <div class="stat-number mb-3">{{ stats.total_mailings }}</div>
+                <small>Создано вами</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card text-white bg-info h-100">
+            <div class="card-body p-4 text-center">
+                <div class="stat-label mb-3">Всего попыток</div>
+                <div class="stat-number mb-3">{{ stats.total_attempts }}</div>
+                <small>Отправленных писем</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card text-white bg-success h-100">
+            <div class="card-body p-4 text-center">
+                <div class="stat-label mb-3">Успешных</div>
+                <div class="stat-number mb-3">{{ stats.successful_attempts }}</div>
+                <small>Доставлено</small>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6 col-lg-3">
+        <div class="card stat-card text-white bg-danger h-100">
+            <div class="card-body p-4 text-center">
+                <div class="stat-label mb-3">Неуспешных</div>
+                <div class="stat-number mb-3">{{ stats.failed_attempts }}</div>
+                <small>Ошибок доставки</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white fw-bold">
+        Сводка по отправленным сообщениям
+    </div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-4">
+                <h3 class="text-primary">{{ stats.total_messages_sent }}</h3>
+                <p class="text-muted mb-0">Всего отправлено писем</p>
+            </div>
+            <div class="col-md-4">
+                {% if stats.total_attempts > 0 %}
+                    {% widthratio stats.successful_attempts stats.total_attempts 100 as success_rate %}
+                    <h3 class="text-success">{{ success_rate }}%</h3>
+                {% else %}
+                    <h3 class="text-success">0%</h3>
+                {% endif %}
+                <p class="text-muted mb-0">Процент успешных отправок</p>
+            </div>
+            <div class="col-md-4">
+                {% if stats.total_attempts > 0 %}
+                    {% widthratio stats.failed_attempts stats.total_attempts 100 as fail_rate %}
+                    <h3 class="text-danger">{{ fail_rate }}%</h3>
+                {% else %}
+                    <h3 class="text-danger">0%</h3>
+                {% endif %}
+                <p class="text-muted mb-0">Процент ошибок</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <p class="text-muted small mb-0">
+            <strong>Примечание:</strong> Статистика учитывает только ваши личные рассылки.
+            Каждая попытка отправки письма одному получателю считается отдельно.
+        </p>
+    </div>
+</div>
+
+<div class="mt-4">
+    <a href="{% url 'main:dashboard' %}" class="btn btn-secondary">Назад на главную</a>
+    <a href="{% url 'mailings:mailing_list' %}" class="btn btn-outline-primary">Мои рассылки</a>
+</div>
+{% endblock %}
