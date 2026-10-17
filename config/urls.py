@@ -20,6 +20,7 @@ from django.urls import URLPattern, URLResolver, include, path
 
 urlpatterns: list[URLPattern | URLResolver] = [
     path("admin/", admin.site.urls),
+    path("users/", include("users.urls", namespace="users")),
     path("clients/", include("clients.urls", namespace="clients")),
     path("messages/", include("mail_messages.urls", namespace="mail_messages")),
     path("mailings/", include("mailings.urls", namespace="mailings")),
