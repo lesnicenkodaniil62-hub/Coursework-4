@@ -1,6 +1,7 @@
 import secrets
+from typing import Any
 
-from django.contrib.auth.models import User
+from django.contrib.auth.models import Group, User
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
@@ -45,8 +46,15 @@ def create_user_profile(
     sender: type[User],
     instance: User,
     created: bool,
-    **kwargs,
+    **kwargs: Any,
 ) -> None:
-    """Автоматически создаёт профиль при создании пользователя."""
-    if created:
-        UserProfile.objects.create(user=instance)
+    """Создаёт профиль и выдаёт роль 'Пользователь' новому пользователю."""
+    if not created:
+        return
+
+    UserProfile.objects.create(user=instance)
+
+    group = Group.objects.filter(name="Пользователь").first()
+    if group is None:
+        group = Group.objects.create(name="Пользователь")
+    instance.groups.add(group)
