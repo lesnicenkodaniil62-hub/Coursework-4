@@ -158,6 +158,11 @@ MAILERS = {
 
 DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@messenger.com")
 
+# --- Аутентификация ---
+LOGIN_URL = "users:login"
+LOGIN_REDIRECT_URL = "main:dashboard"
+LOGOUT_REDIRECT_URL = "users:login"
+
 # --- Кеширование (Redis) ---
 # В продакшене используется Redis (код ниже закомментирован из-за ограничений
 # локальной среды разработки Windows).
@@ -176,7 +181,3 @@ CACHES = {
     }
 }
 
-# --- Аутентификация ---
-LOGIN_URL = "/admin/login/"
-LOGIN_REDIRECT_URL = "/"
-LOGOUT_REDIRECT_URL = "/"

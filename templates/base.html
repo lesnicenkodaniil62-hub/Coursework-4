@@ -35,13 +35,27 @@
                     <a class="nav-link" href="{% url 'mailings:mailing_list' %}">Рассылки</a>
                 </li>
             </ul>
-            <span class="navbar-text text-white">
+
+            <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
                 {% if user.is_authenticated %}
-                    {{ user.username }}
+                    <li class="nav-item">
+                        <span class="nav-link text-white">{{ user.username }}</span>
+                    </li>
+                    <li class="nav-item">
+                        <form method="post" action="{% url 'users:logout' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-light btn-sm nav-link">Выйти</button>
+                        </form>
+                    </li>
                 {% else %}
-                    <a href="{% url 'admin:login' %}" class="text-white text-decoration-none">Войти</a>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'users:login' %}">Войти</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'users:register' %}">Регистрация</a>
+                    </li>
                 {% endif %}
-            </span>
+            </ul>
         </div>
     </div>
 </nav>
