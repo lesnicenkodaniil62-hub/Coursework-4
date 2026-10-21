@@ -14,6 +14,7 @@ from django.views.generic import CreateView, DeleteView, DetailView, ListView, U
 
 from mail_messages.models import Message
 from users.mixins import ManagerRequiredMixin, OwnerFilterMixin, OwnerOnlyMixin
+from users.services import invalidate_user_stats_cache
 
 from .forms import MailingForm
 from .models import Mailing, MailingAttempt
@@ -149,6 +150,9 @@ class MailingSendView(LoginRequiredMixin, View):
                 fail_count += 1
 
         MailingAttempt.objects.bulk_create(attempts_data)
+
+        # Инвалидируем кэш статистики пользователя, так как добавились новые попытки
+        invalidate_user_stats_cache(user)
 
         messages.success(request, f"Рассылка завершена. Успешно: {success_count}, Ошибок: {fail_count}.")
 

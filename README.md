@@ -15,7 +15,7 @@ git clone https://github.com/lesnicenkodaniil62-hub/Coursework-4
 1. Веб-фреймворк, база данных и окружение:
 django — основной веб-фреймворк проекта.
 psycopg2 — драйвер для подключения и работы с базой данных PostgreSQL.
-python-dotenv — загрузка переменных окружения из файла .env.
+python-dotenv — загрузка переменных окружения из файла `.env`.
 Pillow — библиотека для обработки и работы с изображениями.
 2. Работа с данными, API и автоматизация:
 pandas и openpyxl — анализ данных, а также чтение/запись файлов формата Excel (.xlsx).
@@ -91,6 +91,8 @@ poetry add --group dev ipython
 * python manage.py create_roles
 4. Запустите сервер:
 * python manage.py runserver
+5. Главная страница — общая статистика с кэшированием (используется встроенный LocMemCache для стабильности, архитектура полностью совместима с Redis).
+
 
 ## Документация:
 

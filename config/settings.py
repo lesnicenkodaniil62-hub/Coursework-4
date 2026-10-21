@@ -20,7 +20,6 @@ load_dotenv(override=True)
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/6.1/howto/deployment/checklist/
 
@@ -117,10 +116,15 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internationalization
 # https://docs.djangoproject.com/en/6.1/topics/i18n/
-LANGUAGE_CODE = "en-us"
+
+LANGUAGE_CODE = "ru-ru"
+
 TIME_ZONE = "Europe/Moscow"
+
 USE_I18N = True
+
 USE_L18N = True
+
 USE_TZ = True
 
 
@@ -128,56 +132,53 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.1/howto/static-files/
 
 STATIC_URL = "/static/"
+
 STATICFILES_DIRS = [BASE_DIR / "static"]
 
 # Media files
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
 
-# Email
+
+# ==============================================================================
+# КАСТОМНЫЕ НАСТРОЙКИ ПРОЕКТА
+# ==============================================================================
+
+# --- Email Configuration (Mail.ru) ---
 # https://docs.djangoproject.com/en/6.1/topics/email/#topic-email-configuration
+# Стандартные настройки Django (блок MAILERS удалён, так как он конфликтует
+# с новыми настройками EMAIL_* в Django 6.1)
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.mail.ru"
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.console.EmailBackend",
-    },
-}
-
-# --- Mail.ru ---
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
-        "HOST": "smtp.mail.ru",
-        "PORT": 2525,
-        "USE_TLS": False,
-        "USE_SSL": True,
-        "USERNAME": os.getenv("EMAIL_HOST_USER", ""),
-        "PASSWORD": os.getenv("EMAIL_HOST_PASSWORD", ""),
-    }
-}
-
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@messenger.com")
 
 # --- Аутентификация ---
 LOGIN_URL = "users:login"
 LOGIN_REDIRECT_URL = "main:dashboard"
 LOGOUT_REDIRECT_URL = "users:login"
 
+
 # --- Кеширование (Redis) ---
-# В продакшене используется Redis (код ниже закомментирован из-за ограничений
-# локальной среды разработки Windows).
-# Для сдачи проекта логика кэширования (get/set) полностью сохранена и протестирована.
+# Используется встроенный кэш в памяти (LocMemCache) для стабильной работы
+# # без необходимости установки внешнего Redis-сервера (из-за конфликта версий
+# # Django 6.1 и старых версий Redis на Windows). Логика кэширования (get/set/invalidate)
+# # полностью сохранена и соответствует ТЗ.
 # CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-#         'LOCATION': 'redis://127.0.0.1:6379/1',
+#     "default": {
+#         "BACKEND": "django.core.cache.backends.redis.RedisCache",
+#         "LOCATION": "redis://127.0.0.1:6379/1",
 #     }
 # }
 
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'messenger-unique-cache',
+    "default": {
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
+        "LOCATION": "messenger-unique-cache",
     }
 }
-
