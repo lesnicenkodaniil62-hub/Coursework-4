@@ -143,20 +143,16 @@ MAILERS = {
     },
 }
 
-# --- Mail.ru ---
-MAILERS = {
-    "default": {
-        "BACKEND": "django.core.mail.backends.smtp.EmailBackend",
-        "HOST": "smtp.mail.ru",
-        "PORT": 2525,
-        "USE_TLS": False,
-        "USE_SSL": True,
-        "USERNAME": os.getenv("EMAIL_HOST_USER", ""),
-        "PASSWORD": os.getenv("EMAIL_HOST_PASSWORD", ""),
-    }
-}
 
-DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", "noreply@messenger.com")
+# --- Email Configuration (Mail.ru) ---
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.mail.ru"
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
+DEFAULT_FROM_EMAIL = os.getenv("DEFAULT_FROM_EMAIL", EMAIL_HOST_USER)
 
 # --- Аутентификация ---
 LOGIN_URL = "users:login"
@@ -164,20 +160,9 @@ LOGIN_REDIRECT_URL = "main:dashboard"
 LOGOUT_REDIRECT_URL = "users:login"
 
 # --- Кеширование (Redis) ---
-# В продакшене используется Redis (код ниже закомментирован из-за ограничений
-# локальной среды разработки Windows).
-# Для сдачи проекта логика кэширования (get/set) полностью сохранена и протестирована.
-# CACHES = {
-#     'default': {
-#         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
-#         'LOCATION': 'redis://127.0.0.1:6379/1',
-#     }
-# }
-
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
-        'LOCATION': 'messenger-unique-cache',
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://127.0.0.1:6379/1",
     }
 }
-

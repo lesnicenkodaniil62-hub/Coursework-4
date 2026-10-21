@@ -27,8 +27,9 @@ def get_dashboard_stats() -> DashboardStats:
 
     total_mailings: int = Mailing.objects.count()
 
+    # Считаем активными те рассылки, чьё временное окно сейчас открыто,
+    # независимо от того, успел ли обновиться статус в БД.
     active_mailings: int = Mailing.objects.filter(
-        status=Mailing.STATUS_RUNNING,
         start_time__lte=now,
         end_time__gte=now,
     ).count()
